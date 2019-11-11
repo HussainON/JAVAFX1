@@ -1,0 +1,233 @@
+package application;
+
+import javafx.animation.AnimationTimer;
+import javafx.application.Application;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+/*import javafx.beans.value.ObservableNumberValue;*/
+/*import javafx.scene.AmbientLight;*/
+import javafx.scene.Camera;
+import javafx.scene.Group;
+import javafx.scene.Node;
+/*import javafx.scene.Parent;*/
+import javafx.scene.PerspectiveCamera;
+import javafx.scene.PointLight;
+import javafx.scene.Scene;
+//import javafx.scene.control.Slider;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.control.Button;
+import javafx.scene.input.ScrollEvent;
+//import javafx.scene.layout.Background;
+//import javafx.scene.layout.BackgroundImage;
+//import javafx.scene.layout.Background;
+/*import javafx.scene.input.KeyEvent;*/
+import javafx.scene.paint.Color;
+import javafx.scene.paint.PhongMaterial;
+/*import javafx.scene.shape.Shape3D;*/
+import javafx.scene.shape.Sphere;
+import javafx.scene.transform.Rotate;
+import javafx.scene.transform.Transform;
+import javafx.scene.transform.Translate;
+import javafx.stage.Stage;
+
+
+public class Main< angleX, angleY> extends Application {
+	
+	Stage window;
+	Scene scene1, scene2;
+
+	private static final int width = 1400;
+	private static final int height = 1000;
+	int initialValue = 0;
+
+	private double anchorX, anchorY;
+	private double anchorAngleX  = 0;
+	private double anchorAngleY = 0;
+	private final DoubleProperty angleX = new SimpleDoubleProperty(initialValue);
+	private final DoubleProperty angleY = new SimpleDoubleProperty(initialValue);
+
+	int radius = 100;
+	private final Sphere sphere = new Sphere(radius);
+
+	int angle = 0;
+	
+	public static void main(String[] args) {
+		launch(args);
+	}
+
+	@Override
+	public void start(Stage primaryStage) throws Exception {
+		boolean fixedEyeAtCameraZero = true;
+		Camera camera = new PerspectiveCamera(fixedEyeAtCameraZero);
+		camera.setNearClip(100);
+		camera.setFarClip(10000);
+		camera.translateZProperty().set(-1000);
+		camera.translateXProperty().set(0);
+		camera.translateYProperty().set(0);
+
+		SmartGroup world = new SmartGroup();
+		world.getChildren().add(prepareSphere());
+
+//		Slider slider = prepareSlider();
+//		world.translateZProperty().bind(slider.valueProperty());
+//		Button button = prapareButton();
+		Button button1 = prapareButton1();
+
+
+		Group root = new Group();
+		root.getChildren().add(world);
+		root.getChildren().add(prepareImageView());
+//		root.getChildren().addAll(prepareLightSource());
+
+//		root.getChildren().add(slider);
+//		root.getChildren().add(button);
+		root.getChildren().add(button1);
+
+		boolean depthBuffer = true;
+		Scene scene = new Scene(root, width, height, depthBuffer);
+		scene.setFill(Color.SILVER);
+		scene.setCamera(camera);
+
+		initMouseControl(world, scene, primaryStage);
+
+		window = primaryStage;
+		primaryStage.setTitle("MKE Mars");
+		primaryStage.setScene(scene);
+		primaryStage.show();
+
+		AnimationTimer timer = new AnimationTimer() {
+			@Override
+			public void handle(long now) {
+				pointLight.setRotate(pointLight.getRotate());
+			}
+		};
+		timer.start();
+
+		prepareAnimation();
+		
+	}
+
+	private final PointLight pointLight = new PointLight();
+
+	private void prepareAnimation() {
+			AnimationTimer timer = new AnimationTimer() {
+				@Override
+				public void handle(long now) {
+					sphere.rotateProperty().set(sphere.getRotate() + 0.1);
+				}
+			};
+			timer.start();
+	}
+
+		private ImageView prepareImageView() {
+			Image image = new Image(getClass().getResourceAsStream("/resources/galaxy.jpg"));
+			ImageView imageView = new ImageView(image);
+			imageView.setPreserveRatio(true);
+
+			int z = 800;
+			imageView.getTransforms().add(new Translate(-image.getWidth()/2,-image.getHeight()/2, z));
+			return imageView;
+		}
+
+	private Node prepareSphere() {
+		PhongMaterial sphereMaterial = new PhongMaterial();
+		sphereMaterial.setDiffuseMap(new Image(getClass().getResourceAsStream("/resources/Mars.jpg")));
+		sphereMaterial.setSelfIlluminationMap(new Image(getClass().getResourceAsStream("/resources/earth-l.jpg")));
+		sphereMaterial.setSpecularMap(new Image(getClass().getResourceAsStream("/resources/earth-s.jpg")));
+		sphereMaterial.setBumpMap(new Image(getClass().getResourceAsStream("/resources/earth-n.jpg")));
+
+		sphere.setRotationAxis(Rotate.Y_AXIS);
+		sphere.setMaterial(sphereMaterial);
+		return sphere;
+	}
+
+
+//	private Slider prepareSlider() {
+//		Slider slider = new Slider();
+//		slider.setMax(300);
+//		slider.setMin(-100);
+//		slider.setPrefWidth(300d);
+//		slider.setLayoutX(-150);
+//		slider.setLayoutY(150);
+//		slider.setShowTickLabels(true);
+//		slider.setTranslateZ(5);
+//		slider.setStyle("-fx-base: black"); 
+//	return slider;
+//	
+//	}
+	
+//	private Button prapareButton() {
+//		Button button = new Button();
+//		button.setText("Click ME");
+//		Group g = new Group();
+//		g.getChildren().add(button);
+//		button.setLayoutX(-350);
+//		button.setLayoutY(-250);
+//		button.setStyle("-fx-base: red");
+//		
+//		return button;
+//	}
+	private Button prapareButton1() {
+		Image newGame = new Image("/resources/uranus.png");
+//		BackgroundImage newGameBgr = new BackgroundImage(newGame, null, null, null, null);
+		Button button1 = new Button();
+		button1.setGraphic(new ImageView(newGame));
+//		button1.setBackground(new Background(newGameBgr));
+//		button1.setBackground(Background.EMPTY);
+//		button1.setText("Main Menu");
+		Group g = new Group();
+		g.getChildren().add(button1);
+		button1.setLayoutX(290);
+		button1.setLayoutY(-250);
+		button1.setStyle("-fx-base: white");
+		return button1;
+	}
+
+	private void initMouseControl(SmartGroup group, Scene scene, Stage stage) {
+		// TODO Auto-generated method stub
+		Rotate xRotate;
+		Rotate yRotate;
+		group.getTransforms().addAll(
+				xRotate = new Rotate(angle, Rotate.X_AXIS),
+				yRotate = new Rotate(angle, Rotate.Y_AXIS)
+			);
+		xRotate.angleProperty().bind(angleX);
+		yRotate.angleProperty().bind(angleY);
+
+		scene.setOnMousePressed(event -> {
+			anchorX = event.getSceneX();
+			anchorY = event.getSceneY();
+			anchorAngleX = angleX.get();
+			anchorAngleY = angleY.get();
+		});
+
+		scene.setOnMouseDragged(event -> {
+			angleX.set(anchorAngleX - (anchorY - event.getSceneY()));
+			angleY.set(anchorAngleY + anchorX - event.getSceneX());
+		});
+		stage.addEventHandler(ScrollEvent.SCROLL, event -> {
+			double delta = event.getDeltaY();
+			group.translateZProperty().set(group.getTranslateZ() + delta);
+		});
+	}
+
+	class SmartGroup extends Group {
+		Rotate r;
+		Transform t = new Rotate();
+
+		void rotateByX(int ang) {
+			r = new Rotate(ang, Rotate.X_AXIS);
+			t = t.createConcatenation(r);
+			this.getTransforms().clear();
+			this.getTransforms().addAll(t);
+		}
+
+		void rotateByY(int ang) {
+			r = new Rotate(ang, Rotate.Y_AXIS);
+			t = t.createConcatenation(r);
+			this.getTransforms().clear();
+			this.getTransforms().addAll(t);
+		}
+	}
+}
